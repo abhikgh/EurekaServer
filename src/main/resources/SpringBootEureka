@@ -50,4 +50,117 @@ Run SpringBootConversionFactor in Eclipse on port 8062
 Check in Eureka 2 instances are running
 Run SpringBootConversionClient from Postman and check requests are going to both IntelliJ and Eclipse
 
+Eureka Server
+==================
+<!-- Eureka server -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+</dependency>
+
+eureka:
+   client:
+      registerWithEureka: false
+      fetchRegistry: false
+
+@SpringBootApplication
+@EnableEurekaServer
+public class EurekaServerApplication {
+
+	//http://localhost:8761/
+	public static void main(String[] args) {
+		SpringApplication.run(EurekaServerApplication.class, args);
+	}
+
+}
+
+
+Eureka Client
+==================
+<!-- Eureka Client -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+</dependency>
+
+spring:
+  application:
+    name: conversion-factor
+
+@SpringBootApplication
+@EnableEurekaClient
+public class SpringConversionFactorApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(SpringConversionFactorApplication.class, args);
+	}
+
+}
+
+Client Application
+=========================
+
+<!-- Spring-Cloud-Load-Balancer -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+    <version>4.0.1</version>
+</dependency>
+
+@Configuration
+public class ServiceInstanceConfig {
+
+    @Bean
+    public ServiceInstanceListSupplier serviceInstanceListSupplier(){
+        return new ServiceInstanceSupplier("conversion-factor");
+    }
+}
+
+@AllArgsConstructor
+@Getter
+public class ServiceInstanceSupplier implements ServiceInstanceListSupplier {
+
+    private final String serviceId;
+
+    @Override
+    public Flux<List<ServiceInstance>> get() {
+        return Flux.just(Arrays
+                .asList(new DefaultServiceInstance(serviceId + "1", serviceId, "localhost", 8061, false),
+                      new DefaultServiceInstance(serviceId + "2", serviceId, "localhost", 8062, false)));
+    }
+}
+
+@LoadBalancerClient(name = "conversion-factor", configuration = ServiceInstanceConfig.class)
+class WebClientConfig {
+
+    @LoadBalanced
+    @Bean
+    WebClient.Builder webClientBuilder() {
+        return WebClient.builder();
+    }
+
+}
+
+@RestController
+public class NavigationController {
+
+    @Autowired
+    private WebClient.Builder webClientBuilder;
+
+    //http://localhost:8071/getConversionFactorClient/AUD
+    @GetMapping(value = "/getConversionFactorClient/{countryCode}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<String> convertCurrency(@PathVariable("countryCode") String countryCode) {
+
+        return webClientBuilder.build()
+                .get()
+                .uri("http://conversion-factor/eureka/v1/getConversionFactor/" + countryCode)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class);
+
+    }
+
+}
+
 
