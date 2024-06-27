@@ -18,41 +18,7 @@ Spring Cloud is a family of libraries that integrates common patterns in the Spr
 Spring Cloud Netflix Eureka
 -------------------------------
 discovery-service
-Each service has to register with Eureka Server. All clients must communicate with the Eureka Server
-    and then to the actual service
-
-Eureka server
-=======================
-
-<!-- Eureka server -->
-<dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
-</dependency>
-
-eureka:
-   client:
-      registerWithEureka: false
-      fetchRegistry: false
-
-spring:
-   application:
-         name: eureka
-   cloud:
-         config:
-            uri: ${CONFIG_SERVER_URL:http://localhost:8888}
-
-
-@SpringBootApplication
-@EnableEurekaServer
-public class EurekaServerApplication {
-
-	//http://localhost:8761/
-	public static void main(String[] args) {
-		SpringApplication.run(EurekaServerApplication.class, args);
-	}
-
-}
+Each service has to register with Eureka Server. All clients must communicate with the Eureka Server and then to the actual service
 
 Eureka server :: http://localhost:8761/
 
@@ -82,24 +48,6 @@ D:\workspace2\SpringConversionFactor>java -jar -Dserver.port=8062 target/SpringC
 
 Run SpringBootConversionFactor in Eclipse on port 8062
 Check in Eureka 2 instances are running
-class DemoInstanceSupplier implements ServiceInstanceListSupplier {
-    private final String serviceId;
-
-    public DemoInstanceSupplier(String serviceId) {
-        this.serviceId = serviceId;
-    }
-
-    @Override
-    public String getServiceId() {
-        return serviceId;
-    }
-
-    @Override
-    public Flux<List<ServiceInstance>> get() {
-        return Flux.just(Arrays
-                .asList(new DefaultServiceInstance(serviceId + "1", serviceId, "localhost", 8061, false),
-                      new DefaultServiceInstance(serviceId + "1", serviceId, "localhost", 8062, false)));
-    }
-}
 Run SpringBootConversionClient from Postman and check requests are going to both IntelliJ and Eclipse
+
 
