@@ -6,6 +6,7 @@ Spring Cloud is a family of libraries that integrates common patterns in the Spr
 Spring Cloud EurekaServer ::  service registration and discovery
 Spring Cloud EurekaClient
 Spring Cloud LoadBalancer
+Spring Cloud Gateway
 
 <artifactId>spring-boot-starter-parent</artifactId>
 <version>2.7.17</version>
@@ -43,8 +44,8 @@ Run SpringBootConversionFactor in Eclipse on port 8062
 Check in Eureka 2 instances are running
 Run SpringBootConversionClient from Postman and check requests are going to both IntelliJ and Eclipse
 
-Eureka Server
-==================
+Spring Cloud EurekaServer
+==============================
 <!-- Eureka server -->
 <dependency>
     <groupId>org.springframework.cloud</groupId>
@@ -68,8 +69,8 @@ public class EurekaServerApplication {
 }
 
 
-Eureka Client
-==================
+Spring Cloud EurekaClient
+============================
 <!-- Eureka Client -->
 <dependency>
     <groupId>org.springframework.cloud</groupId>
@@ -90,8 +91,8 @@ public class SpringConversionFactorApplication {
 
 }
 
-Client Application
-=========================
+Spring Cloud LoadBalancer
+=============================
 
 <!-- Spring-Cloud-Load-Balancer -->
 <dependency>
@@ -156,4 +157,50 @@ public class NavigationController {
 
 }
 
+Spring Cloud Gateway
+=======================
 
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-gateway</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+
+spring:
+  application:
+    name: conversion-factor
+  cloud:
+    gateway:
+      routes:
+        - id: baeldung_route
+          uri: http://baeldung.com
+          predicates:
+            - Path=/baeldung/
+        - id: test_route
+          uri: http://baeldung.com
+          predicates:
+            - Path=/test/
+
+http://localhost:8061/actuator/gateway/routes/baeldung_route
+{
+  "predicate": "Paths: [/baeldung/], match trailing slash: true",
+  "route_id": "baeldung_route",
+  "filters": [],
+  "uri": "http://baeldung.com:80",
+  "order": 0
+}
+http://localhost:8061/baeldung/ -> https://www.baeldung.com/baeldung/
+
+
+http://localhost:8061/actuator/gateway/routes/test_route
+{
+  "predicate": "Paths: [/test/], match trailing slash: true",
+  "route_id": "test_route",
+  "filters": [],
+  "uri": "http://baeldung.com:80",
+  "order": 0
+}
+http://localhost:8061/test/ ->  https://www.baeldung.com/test/
