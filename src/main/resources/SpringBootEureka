@@ -1,0 +1,105 @@
+Spring Cloud
+=======================
+
+Spring Cloud is a family of libraries that integrates common patterns in the Spring application.
+
+-Eureka : discovery-service
+-Hystrix: circuit-breaker
+-Ribbon : client-side load-balancer
+-Zipkin and Sleuth : distributed log tracing
+-Zuul : load balancer
+
+<artifactId>spring-boot-starter-parent</artifactId>
+<version>2.7.17</version>
+
+<artifactId>spring-cloud-starter-parent</artifactId>
+<version>2021.0.8</version>
+
+Spring Cloud Netflix Eureka
+-------------------------------
+discovery-service
+Each service has to register with Eureka Server. All clients must communicate with the Eureka Server
+    and then to the actual service
+
+Eureka server
+=======================
+
+<!-- Eureka server -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+</dependency>
+
+eureka:
+   client:
+      registerWithEureka: false
+      fetchRegistry: false
+
+spring:
+   application:
+         name: eureka
+   cloud:
+         config:
+            uri: ${CONFIG_SERVER_URL:http://localhost:8888}
+
+
+@SpringBootApplication
+@EnableEurekaServer
+public class EurekaServerApplication {
+
+	//http://localhost:8761/
+	public static void main(String[] args) {
+		SpringApplication.run(EurekaServerApplication.class, args);
+	}
+
+}
+
+Eureka server :: http://localhost:8761/
+
+http://localhost:8061/eureka/v1/addConversionFactor
+{
+    "countryCode": "GBP",
+    "conversionFactor": "1.72"
+}
+
+http://localhost:8061/eureka/v1/addConversionFactor
+{
+    "countryCode": "AUD",
+    "conversionFactor": "1.41"
+}
+
+http://localhost:8061/eureka/v1/updateConversionFactor
+{
+    "countryCode": "AUD",
+    "conversionFactor": "1.42"
+}
+
+http://localhost:8061/eureka/v1/getConversionFactor/AUD
+
+http://localhost:8071/getConversionFactorClient/GBP
+
+D:\workspace2\SpringConversionFactor>java -jar -Dserver.port=8062 target/SpringConversionFactor-0.0.2-SNAPSHOT.jar
+
+Run SpringBootConversionFactor in Eclipse on port 8062
+Check in Eureka 2 instances are running
+class DemoInstanceSupplier implements ServiceInstanceListSupplier {
+    private final String serviceId;
+
+    public DemoInstanceSupplier(String serviceId) {
+        this.serviceId = serviceId;
+    }
+
+    @Override
+    public String getServiceId() {
+        return serviceId;
+    }
+
+    @Override
+    public Flux<List<ServiceInstance>> get() {
+        return Flux.just(Arrays
+                .asList(new DefaultServiceInstance(serviceId + "1", serviceId, "localhost", 8061, false),
+                      new DefaultServiceInstance(serviceId + "1", serviceId, "localhost", 8062, false)));
+    }
+}
+Run SpringBootConversionClient from Postman and check requests are going to both IntelliJ and Eclipse
+
