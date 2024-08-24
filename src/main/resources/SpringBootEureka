@@ -2,19 +2,68 @@ Spring Cloud
 =======================
 Spring Cloud is a family of libraries that integrates common patterns in the Spring application.
 
-
 Spring Cloud EurekaServer ::  service registration and discovery
 Spring Cloud EurekaClient
 Spring Cloud LoadBalancer
 Spring Cloud Gateway
 
-<artifactId>spring-boot-starter-parent</artifactId>
-<version>2.7.17</version>
-<artifactId>spring-cloud-starter-parent</artifactId>
-<version>2021.0.8</version>
+Spring Cloud EurekaServer
+====================================
+EurekaServer
 
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.2.7</version>
+    <relativePath />
+</parent>
+
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-parent</artifactId>
+    <version>2023.0.0</version>
+    <type>pom</type>
+    <scope>import</scope>
+</dependency>
+
+<!-- Eureka server -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+</dependency>
+
+eureka:
+   client:
+      registerWithEureka: false
+      fetchRegistry: false
+
+@SpringBootApplication
+@EnableEurekaServer
+public class EurekaServerApplication {
+
+	//http://localhost:8761/
+	public static void main(String[] args) {
+		SpringApplication.run(EurekaServerApplication.class, args);
+	}
+}
 
 Eureka server :: http://localhost:8761/
+
+Spring Cloud EurekaClient
+============================
+SpringConversionFactor
+
+<version>3.2.7</version>
+<version>2023.0.0</version>
+
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+</dependency>
+
+spring:
+  application:
+    name: conversion-factor
 
 http://localhost:8061/eureka/v1/addConversionFactor
 {
@@ -35,66 +84,19 @@ http://localhost:8061/eureka/v1/updateConversionFactor
 }
 
 http://localhost:8061/eureka/v1/getConversionFactor/AUD
+http://localhost:8062/eureka/v1/getConversionFactor/AUD
 
-http://localhost:8071/getConversionFactorClient/GBP
-
-D:\workspace2\SpringConversionFactor>java -jar -Dserver.port=8062 target/SpringConversionFactor-0.0.2-SNAPSHOT.jar
-
-Run SpringBootConversionFactor in Eclipse on port 8062
+Run SpringBootConversionFactor in IntelliJ on port 8061
+AND
+[Run SpringBootConversionFactor in Eclipse on port 8062 OR
+ D:\workspace2\SpringConversionFactor>java -jar -Dserver.port=8062 target/SpringConversionFactor-0.0.2-SNAPSHOT.jar]
 Check in Eureka 2 instances are running
 Run SpringBootConversionClient from Postman and check requests are going to both IntelliJ and Eclipse
 
-Spring Cloud EurekaServer
-==============================
-<!-- Eureka server -->
-<dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
-</dependency>
+Spring Client (calling Spring Cloud EurekaClient in a Load-Balanced manner)
+===================================================================================
+SpringConversionFactorClient
 
-eureka:
-   client:
-      registerWithEureka: false
-      fetchRegistry: false
-
-@SpringBootApplication
-@EnableEurekaServer
-public class EurekaServerApplication {
-
-	//http://localhost:8761/
-	public static void main(String[] args) {
-		SpringApplication.run(EurekaServerApplication.class, args);
-	}
-
-}
-
-
-Spring Cloud EurekaClient
-============================
-<!-- Eureka Client -->
-<dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-</dependency>
-
-spring:
-  application:
-    name: conversion-factor
-
-@SpringBootApplication
-@EnableEurekaClient
-public class SpringConversionFactorApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(SpringConversionFactorApplication.class, args);
-	}
-
-}
-
-Spring Cloud LoadBalancer
-=============================
-
-<!-- Spring-Cloud-Load-Balancer -->
 <dependency>
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-starter-loadbalancer</artifactId>
@@ -107,20 +109,6 @@ public class ServiceInstanceConfig {
     @Bean
     public ServiceInstanceListSupplier serviceInstanceListSupplier(){
         return new ServiceInstanceSupplier("conversion-factor");
-    }
-}
-
-@AllArgsConstructor
-@Getter
-public class ServiceInstanceSupplier implements ServiceInstanceListSupplier {
-
-    private final String serviceId;
-
-    @Override
-    public Flux<List<ServiceInstance>> get() {
-        return Flux.just(Arrays
-                .asList(new DefaultServiceInstance(serviceId + "1", serviceId, "localhost", 8061, false),
-                      new DefaultServiceInstance(serviceId + "2", serviceId, "localhost", 8062, false)));
     }
 }
 
@@ -145,7 +133,8 @@ public class NavigationController {
     @GetMapping(value = "/getConversionFactorClient/{countryCode}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<String> convertCurrency(@PathVariable("countryCode") String countryCode) {
 
-        return webClientBuilder.build()
+        return webClientBuilder
+                .build()
                 .get()
                 .uri("http://conversion-factor/eureka/v1/getConversionFactor/" + countryCode)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -204,3 +193,4 @@ http://localhost:8061/actuator/gateway/routes/test_route
   "order": 0
 }
 http://localhost:8061/test/ ->  https://www.baeldung.com/test/
+
