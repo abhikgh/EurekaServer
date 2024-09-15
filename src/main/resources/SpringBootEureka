@@ -7,9 +7,12 @@ Spring Cloud EurekaClient
 Spring Cloud LoadBalancer
 Spring Cloud Gateway
 
-Spring Cloud EurekaServer
-====================================
 EurekaServer
+===================================
+service discovery service
+
+<version>3.2.7</version>
+<version>2023.0.0</version>
 
 <parent>
     <groupId>org.springframework.boot</groupId>
@@ -17,14 +20,6 @@ EurekaServer
     <version>3.2.7</version>
     <relativePath />
 </parent>
-
-<dependency>
-    <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-parent</artifactId>
-    <version>2023.0.0</version>
-    <type>pom</type>
-    <scope>import</scope>
-</dependency>
 
 <!-- Eureka server -->
 <dependency>
@@ -41,20 +36,15 @@ eureka:
 @EnableEurekaServer
 public class EurekaServerApplication {
 
-	//http://localhost:8761/
+	//Eureka server :: http://localhost:8761/
 	public static void main(String[] args) {
 		SpringApplication.run(EurekaServerApplication.class, args);
 	}
 }
 
-Eureka server :: http://localhost:8761/
-
-Spring Cloud EurekaClient
+EurekaClient
 ============================
 SpringConversionFactor
-
-<version>3.2.7</version>
-<version>2023.0.0</version>
 
 <dependency>
     <groupId>org.springframework.cloud</groupId>
@@ -64,11 +54,20 @@ SpringConversionFactor
 spring:
   application:
     name: conversion-factor
+eureka:
+  client:
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka
 
-http://localhost:8061/eureka/v1/addConversionFactor
-{
-    "countryCode": "GBP",
-    "conversionFactor": "1.72"
+@SpringBootApplication
+@EnableDiscoveryClient
+public class SpringConversionFactorApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(SpringConversionFactorApplication.class, args);
+	}
+
 }
 
 http://localhost:8061/eureka/v1/addConversionFactor
@@ -76,13 +75,11 @@ http://localhost:8061/eureka/v1/addConversionFactor
     "countryCode": "AUD",
     "conversionFactor": "1.41"
 }
-
-http://localhost:8061/eureka/v1/updateConversionFactor
+http://localhost:8062/eureka/v1/updateConversionFactor
 {
     "countryCode": "AUD",
     "conversionFactor": "1.42"
 }
-
 http://localhost:8061/eureka/v1/getConversionFactor/AUD
 http://localhost:8062/eureka/v1/getConversionFactor/AUD
 
@@ -91,11 +88,11 @@ AND
 [Run SpringBootConversionFactor in Eclipse on port 8062 OR
  D:\workspace2\SpringConversionFactor>java -jar -Dserver.port=8062 target/SpringConversionFactor-0.0.2-SNAPSHOT.jar]
 Check in Eureka 2 instances are running
-Run SpringBootConversionClient from Postman and check requests are going to both IntelliJ and Eclipse
+Run SpringBootConversionClient from Postman (8061/8062) and check requests are going to both IntelliJ and Eclipse
 
-Spring Client (calling Spring Cloud EurekaClient in a Load-Balanced manner)
+Client (calling EurekaClient in a Load-Balanced manner)
 ===================================================================================
-SpringConversionFactorClient
+SpringConversionFactorFeignClient
 
 <dependency>
     <groupId>org.springframework.cloud</groupId>
