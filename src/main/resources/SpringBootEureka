@@ -110,6 +110,7 @@ public class ServiceInstanceConfig {
 }
 
 @LoadBalancerClient(name = "conversion-factor", configuration = ServiceInstanceConfig.class)
+@Configuration
 class WebClientConfig {
 
     @LoadBalanced
